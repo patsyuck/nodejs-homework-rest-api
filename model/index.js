@@ -1,5 +1,5 @@
 const fs = require('fs/promises')
-// const contacts = require('./contacts.json')
+const contacts = require('./contacts.json')
 const path = require('path')
 const contactsPath = path.join(__dirname, 'contacts.json')
 
@@ -11,8 +11,7 @@ async function readData() {
 
 async function listContacts() {
   try {
-    const result = await readData()
-    console.table(result)
+    return contacts
   } catch (error) {
     console.log(error.message)
   }
