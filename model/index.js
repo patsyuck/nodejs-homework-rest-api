@@ -1,5 +1,4 @@
 const fs = require('fs/promises')
-// const contacts = require('./contacts.json')
 const path = require('path')
 const contactsPath = path.join(__dirname, 'contacts.json')
 
@@ -36,14 +35,13 @@ async function removeContact(contactId) {
     const result = await readData()
     const idx = result.findIndex(item => item.id === contactId)
     if (idx === -1) {
-      throw new Error(`Contact with id=${contactId} not found!`)
+      return null
     }
     const contact = result[idx]
     const contacts = result.filter(item => item.id !== contactId)
     const newContacts = JSON.stringify(contacts)
     await fs.writeFile(contactsPath, newContacts)
-    console.log('One contact removed:')
-    console.log(contact)
+    return contact
   } catch (error) {
     console.log(error.message)
   }
