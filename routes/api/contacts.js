@@ -6,7 +6,7 @@ const { contactSchema } = require('../../validation')
 router.get('/', async (req, res, next) => {
   try {
     const listContacts = await contacts.listContacts()
-    res.json({ contacts: listContacts })
+    res.json(listContacts)
   } catch (error) {
     next(error)
   }
@@ -21,7 +21,7 @@ router.get('/:contactId', async (req, res, next) => {
         message: 'Not Found'
       })
     }
-    res.json({ contact: contact })
+    res.json(contact)
   } catch (error) {
     next(error)
   }
@@ -34,9 +34,10 @@ router.post('/', async (req, res, next) => {
       res.status(400).json({
         message: 'missing required name field'
       })
+      return
     }
     const newContact = await contacts.addContact(req.body)
-    res.status(201).json({ newContact: newContact })
+    res.status(201).json(newContact)
   } catch (error) {
     next(error)
   }
@@ -49,15 +50,16 @@ router.put('/:contactId', async (req, res, next) => {
       res.status(400).json({
         message: 'missing fields'
       })
+      return
     }
     const { contactId } = req.params
-    const newContact = await contacts.updateContact(parseInt(contactId), req.body)
-    if (!newContact) {
+    const updatedContact = await contacts.updateContact(parseInt(contactId), req.body)
+    if (!updatedContact) {
       res.status(404).json({
         message: 'Not Found'
       })
     }
-    res.json({ updatedContact: newContact })
+    res.json(updatedContact)
   } catch (error) {
     next(error)
   }
@@ -66,13 +68,13 @@ router.put('/:contactId', async (req, res, next) => {
 router.delete('/:contactId', async (req, res, next) => {
   try {
     const { contactId } = req.params
-    const contact = await contacts.removeContact(parseInt(contactId))
-    if (!contact) {
+    const deletedContact = await contacts.removeContact(parseInt(contactId))
+    if (!deletedContact) {
       res.status(404).json({
         message: 'Not Found'
       })
     }
-    res.json({ contact: contact })
+    res.json(deletedContact)
   } catch (error) {
     next(error)
   }
