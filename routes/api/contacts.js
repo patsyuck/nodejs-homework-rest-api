@@ -1,6 +1,7 @@
 const express = require('express')
 const router = express.Router()
 const contacts = require('../../model')
+const { contactSchema } = require('../../validation')
 
 router.get('/', async (req, res, next) => {
   try {
@@ -17,7 +18,7 @@ router.get('/:contactId', async (req, res, next) => {
     const contact = await contacts.getContactById(parseInt(contactId))
     if (!contact) {
       res.status(404).json({
-        message: 'NotFound'
+        message: 'Not Found'
       })
     }
     res.json({ contact: contact })
@@ -27,14 +28,42 @@ router.get('/:contactId', async (req, res, next) => {
 })
 
 router.post('/', async (req, res, next) => {
-  res.json({ message: 'template message' })
+  try {
+    const { error } = contactSchema.validate(req.body)
+    if (error) {
+      res.status(400).json({
+        message: 'missing required name field'
+      })
+    }
+    const newContact = await contacts.addContact(req.body)
+    res.status(201).json({ newContact: newContact })
+  } catch (error) {
+    next(error)
+  }
+})
+
+router.put('/:contactId', async (req, res, next) => {
+  try {
+    const { error } = contactSchema.validate(req.body)
+    if (error) {
+      res.status(400).json({
+        message: 'missing fields'
+      })
+    }
+    const { contactId } = req.params
+    const newContact = await contacts.updateContact(parseInt(contactId), req.body)
+    if (!newContact) {
+      res.status(404).json({
+        message: 'Not Found'
+      })
+    }
+    res.json({ updatedContact: newContact })
+  } catch (error) {
+    next(error)
+  }
 })
 
 router.delete('/:contactId', async (req, res, next) => {
-  res.json({ message: 'template message' })
-})
-
-router.patch('/:contactId', async (req, res, next) => {
   res.json({ message: 'template message' })
 })
 

@@ -13,7 +13,6 @@ async function listContacts() {
   try {
     const result = await readData()
     return result
-    // return contacts
   } catch (error) {
     console.log(error.message)
   }
@@ -25,7 +24,6 @@ async function getContactById(contactId) {
     const contact = result.find(item => item.id === contactId)
     if (!contact) {
       return null
-      // throw new Error(`Contact with id=${contactId} not found!`)
     }
     return contact
   } catch (error) {
@@ -51,29 +49,40 @@ async function removeContact(contactId) {
   }
 }
 
-// const addContact = async (body) => {}
-async function addContact(name, email, phone) {
+async function addContact(body) {
   try {
     const result = await readData()
     const idx = result[result.length - 1].id + 1
     const newContact = {
       id: idx,
-      name: name,
-      email: email,
-      phone: phone
+      name: body.name,
+      email: body.email,
+      phone: body.phone
     }
     result[result.length] = newContact
     const newContacts = JSON.stringify(result)
     await fs.writeFile(contactsPath, newContacts)
-    console.log('New contact added:')
-    console.log(newContact)
+    return newContact
   } catch (error) {
     console.log(error.message)
   }
 }
 
-// const updateContact = async (contactId, body) => { }
-async function updateContact(contactId, name, email, phone) {}
+async function updateContact(contactId, body) {
+  try {
+    const result = await readData()
+    const idx = result.findIndex(item => item.id === contactId)
+    if (idx === -1) {
+      return null
+    }
+    result[idx] = { ...result[idx], ...body }
+    const newContacts = JSON.stringify(result)
+    await fs.writeFile(contactsPath, newContacts)
+    return result[idx]
+  } catch (error) {
+    console.log(error.message)
+  }
+}
 
 module.exports = {
   listContacts,
