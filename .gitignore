@@ -1,3 +1,6 @@
+# Connect to MongoDB
+config.js
+
 # Logs
 logs
 *.log

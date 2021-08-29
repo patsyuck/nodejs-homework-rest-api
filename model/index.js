@@ -1,6 +1,25 @@
 const fs = require('fs/promises')
 const path = require('path')
 const contactsPath = path.join(__dirname, 'contacts.json')
+const mongoose = require('mongoose')
+const { DB_HOST } = require('../config')
+// require('dotenv').config()
+
+// mongoose.Promise = global.Promise
+
+/* mongoose.connect(DB_HOST, {
+  useNewUrlParser: true,
+  useCreateIndex: true,
+  useUnifiedTopology: true
+}) */
+mongoose.connect(DB_HOST)
+  .then(() => {
+    console.log('Database connection successful')
+  })
+  .catch(error => {
+    console.log(error.message)
+    process.exit(1)
+  })
 
 async function readData() {
   const data = await fs.readFile(contactsPath)
