@@ -1,6 +1,7 @@
 const fs = require('fs/promises')
 const path = require('path')
 const contactsPath = path.join(__dirname, 'contacts.json')
+const { Contact } = require('./contact')
 const mongoose = require('mongoose')
 const { DB_HOST } = require('../config')
 // require('dotenv').config()

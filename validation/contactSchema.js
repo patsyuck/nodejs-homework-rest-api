@@ -8,7 +8,3 @@ const contactSchema = Joi.object({
 })
 
 module.exports = contactSchema
-
-// const User = model('user', contactSchema)
-
-// module.exports = {User, contactSchema}
