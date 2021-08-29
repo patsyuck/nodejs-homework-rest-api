@@ -1,18 +1,8 @@
-const fs = require('fs/promises')
-const path = require('path')
-const contactsPath = path.join(__dirname, 'contacts.json')
 const { Contact } = require('./contact')
 const mongoose = require('mongoose')
 const { DB_HOST } = require('../config')
 // require('dotenv').config()
 
-// mongoose.Promise = global.Promise
-
-/* mongoose.connect(DB_HOST, {
-  useNewUrlParser: true,
-  useCreateIndex: true,
-  useUnifiedTopology: true
-}) */
 mongoose.connect(DB_HOST)
   .then(() => {
     console.log('Database connection successful')
@@ -22,25 +12,18 @@ mongoose.connect(DB_HOST)
     process.exit(1)
   })
 
-async function readData() {
-  const data = await fs.readFile(contactsPath)
-  const result = JSON.parse(data)
-  return result
-}
-
-async function listContacts() {
+function listContacts() {
   try {
-    const result = await readData()
+    const result = Contact.find()
     return result
   } catch (error) {
     console.log(error.message)
   }
 }
 
-async function getContactById(contactId) {
+function getContactById(contactId) {
   try {
-    const result = await readData()
-    const contact = result.find(item => item.id === contactId)
+    const contact = Contact.findOne({ _id: contactId })
     if (!contact) {
       return null
     }
@@ -52,34 +35,16 @@ async function getContactById(contactId) {
 
 async function removeContact(contactId) {
   try {
-    const result = await readData()
-    const idx = result.findIndex(item => item.id === contactId)
-    if (idx === -1) {
-      return null
-    }
-    const contact = result[idx]
-    const contacts = result.filter(item => item.id !== contactId)
-    const newContacts = JSON.stringify(contacts)
-    await fs.writeFile(contactsPath, newContacts)
-    return contact
+    const deletedContact = Contact.findByIdAndRemove({ _id: contactId })
+    return deletedContact
   } catch (error) {
     console.log(error.message)
   }
 }
 
-async function addContact(body) {
+function addContact(body) {
   try {
-    const result = await readData()
-    const idx = result[result.length - 1].id + 1
-    const newContact = {
-      id: idx,
-      name: body.name,
-      email: body.email,
-      phone: body.phone
-    }
-    result[result.length] = newContact
-    const newContacts = JSON.stringify(result)
-    await fs.writeFile(contactsPath, newContacts)
+    const newContact = Contact.create(body)
     return newContact
   } catch (error) {
     console.log(error.message)
@@ -88,15 +53,8 @@ async function addContact(body) {
 
 async function updateContact(contactId, body) {
   try {
-    const result = await readData()
-    const idx = result.findIndex(item => item.id === contactId)
-    if (idx === -1) {
-      return null
-    }
-    result[idx] = { ...result[idx], ...body }
-    const newContacts = JSON.stringify(result)
-    await fs.writeFile(contactsPath, newContacts)
-    return result[idx]
+    const updatedContact = Contact.findByIdAndUpdate({ _id: contactId }, body, { new: true })
+    return updatedContact
   } catch (error) {
     console.log(error.message)
   }
