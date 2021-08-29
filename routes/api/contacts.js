@@ -1,7 +1,7 @@
 const express = require('express')
 const router = express.Router()
 const contacts = require('../../model')
-const { contactSchema } = require('../../validation')
+const { contactSchema, favoriteSchema } = require('../../validation')
 
 router.get('/', async (req, res, next) => {
   try {
@@ -15,7 +15,7 @@ router.get('/', async (req, res, next) => {
 router.get('/:contactId', async (req, res, next) => {
   try {
     const { contactId } = req.params
-    const contact = await contacts.getContactById(parseInt(contactId))
+    const contact = await contacts.getContactById(contactId)
     if (!contact) {
       res.status(404).json({
         message: 'Not Found'
@@ -53,7 +53,29 @@ router.put('/:contactId', async (req, res, next) => {
       return
     }
     const { contactId } = req.params
-    const updatedContact = await contacts.updateContact(parseInt(contactId), req.body)
+    const updatedContact = await contacts.updateContact(contactId, req.body)
+    if (!updatedContact) {
+      res.status(404).json({
+        message: 'Not Found'
+      })
+    }
+    res.json(updatedContact)
+  } catch (error) {
+    next(error)
+  }
+})
+
+router.patch('/:contactId/favorite', async (req, res, next) => {
+  try {
+    const { error } = favoriteSchema.validate(req.body)
+    if (error) {
+      res.status(400).json({
+        message: 'missing field favorite'
+      })
+      return
+    }
+    const { contactId } = req.params
+    const updatedContact = await contacts.updateStatusContact(contactId, req.body)
     if (!updatedContact) {
       res.status(404).json({
         message: 'Not Found'
@@ -68,7 +90,7 @@ router.put('/:contactId', async (req, res, next) => {
 router.delete('/:contactId', async (req, res, next) => {
   try {
     const { contactId } = req.params
-    const deletedContact = await contacts.removeContact(parseInt(contactId))
+    const deletedContact = await contacts.removeContact(contactId)
     if (!deletedContact) {
       res.status(404).json({
         message: 'Not Found'
