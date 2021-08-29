@@ -1,7 +1,6 @@
 const { Contact } = require('./contact')
 const mongoose = require('mongoose')
 const { DB_HOST } = require('../config')
-// require('dotenv').config()
 
 mongoose.connect(DB_HOST)
   .then(() => {
@@ -33,7 +32,7 @@ function getContactById(contactId) {
   }
 }
 
-async function removeContact(contactId) {
+function removeContact(contactId) {
   try {
     const deletedContact = Contact.findByIdAndRemove({ _id: contactId })
     return deletedContact
@@ -51,7 +50,16 @@ function addContact(body) {
   }
 }
 
-async function updateContact(contactId, body) {
+function updateContact(contactId, body) {
+  try {
+    const updatedContact = Contact.findByIdAndUpdate({ _id: contactId }, body, { new: true })
+    return updatedContact
+  } catch (error) {
+    console.log(error.message)
+  }
+}
+
+function updateStatusContact(contactId, body) {
   try {
     const updatedContact = Contact.findByIdAndUpdate({ _id: contactId }, body, { new: true })
     return updatedContact
@@ -65,5 +73,6 @@ module.exports = {
   getContactById,
   removeContact,
   addContact,
-  updateContact
+  updateContact,
+  updateStatusContact
 }

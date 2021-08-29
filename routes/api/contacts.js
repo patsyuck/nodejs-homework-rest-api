@@ -1,7 +1,7 @@
 const express = require('express')
 const router = express.Router()
 const contacts = require('../../model')
-const { contactSchema } = require('../../validation')
+const { contactSchema, favoriteSchema } = require('../../validation')
 
 router.get('/', async (req, res, next) => {
   try {
@@ -54,6 +54,28 @@ router.put('/:contactId', async (req, res, next) => {
     }
     const { contactId } = req.params
     const updatedContact = await contacts.updateContact(contactId, req.body)
+    if (!updatedContact) {
+      res.status(404).json({
+        message: 'Not Found'
+      })
+    }
+    res.json(updatedContact)
+  } catch (error) {
+    next(error)
+  }
+})
+
+router.patch('/:contactId/favorite', async (req, res, next) => {
+  try {
+    const { error } = favoriteSchema.validate(req.body)
+    if (error) {
+      res.status(400).json({
+        message: 'missing field favorite'
+      })
+      return
+    }
+    const { contactId } = req.params
+    const updatedContact = await contacts.updateStatusContact(contactId, req.body)
     if (!updatedContact) {
       res.status(404).json({
         message: 'Not Found'
