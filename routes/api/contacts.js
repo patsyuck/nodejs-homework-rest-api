@@ -1,8 +1,10 @@
+/* eslint-disable new-cap */
 const express = require('express')
 const router = express.Router()
 const contacts = require('../../model')
 const { contactSchema, favoriteSchema } = require('../../validation')
 const asyncWrapper = require('../middlewares/controllerWrapper')
+const createError = require('http-errors')
 
 const getAllContacts = async (req, res, next) => {
   const listContacts = await contacts.listContacts()
@@ -13,9 +15,7 @@ const getOneContact = async (req, res, next) => {
   const { contactId } = req.params
   const contact = await contacts.getContactById(contactId)
   if (!contact) {
-    res.status(404).json({
-      message: 'Not Found'
-    })
+    throw new createError(404, 'Not Found')
   }
   res.json(contact)
 }
@@ -23,10 +23,7 @@ const getOneContact = async (req, res, next) => {
 const addOneContact = async (req, res, next) => {
   const { error } = contactSchema.validate(req.body)
   if (error) {
-    res.status(400).json({
-      message: 'missing required name field'
-    })
-    return
+    throw new createError(400, 'missing required name field')
   }
   const newContact = await contacts.addContact(req.body)
   res.status(201).json(newContact)
@@ -35,17 +32,12 @@ const addOneContact = async (req, res, next) => {
 const updateOneContact = async (req, res, next) => {
   const { error } = contactSchema.validate(req.body)
   if (error) {
-    res.status(400).json({
-      message: 'missing fields'
-    })
-    return
+    throw new createError(400, 'missing fields')
   }
   const { contactId } = req.params
   const updatedContact = await contacts.updateContact(contactId, req.body)
   if (!updatedContact) {
-    res.status(404).json({
-      message: 'Not Found'
-    })
+    throw new createError(404, 'Not Found')
   }
   res.json(updatedContact)
 }
@@ -53,17 +45,12 @@ const updateOneContact = async (req, res, next) => {
 const updateOneStatus = async (req, res, next) => {
   const { error } = favoriteSchema.validate(req.body)
   if (error) {
-    res.status(400).json({
-      message: 'missing field favorite'
-    })
-    return
+    throw new createError(400, 'missing field favorite')
   }
   const { contactId } = req.params
   const updatedContact = await contacts.updateStatusContact(contactId, req.body)
   if (!updatedContact) {
-    res.status(404).json({
-      message: 'Not Found'
-    })
+    throw new createError(404, 'Not Found')
   }
   res.json(updatedContact)
 }
@@ -72,9 +59,7 @@ const deleteOneContact = async (req, res, next) => {
   const { contactId } = req.params
   const deletedContact = await contacts.removeContact(contactId)
   if (!deletedContact) {
-    res.status(404).json({
-      message: 'Not Found'
-    })
+    throw new createError(404, 'Not Found')
   }
   res.json(deletedContact)
 }
