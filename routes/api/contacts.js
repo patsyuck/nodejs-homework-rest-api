@@ -2,16 +2,7 @@ const express = require('express')
 const router = express.Router()
 const contacts = require('../../model')
 const { contactSchema, favoriteSchema } = require('../../validation')
-
-const asyncWrapper = (controller) => {
-  return async (req, res, next) => {
-    try {
-      await controller(req, res, next)
-    } catch (error) {
-      next(error)
-    }
-  }
-}
+const asyncWrapper = require('../middlewares/controllerWrapper')
 
 const getAllContacts = async (req, res, next) => {
   const listContacts = await contacts.listContacts()
