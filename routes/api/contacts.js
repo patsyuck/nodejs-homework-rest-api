@@ -1,105 +1,74 @@
+/* eslint-disable new-cap */
 const express = require('express')
 const router = express.Router()
 const contacts = require('../../model')
 const { contactSchema, favoriteSchema } = require('../../validation')
+const { asyncWrapper, authentication } = require('../middlewares')
+const createError = require('http-errors')
 
-router.get('/', async (req, res, next) => {
-  try {
-    const listContacts = await contacts.listContacts()
-    res.json(listContacts)
-  } catch (error) {
-    next(error)
-  }
-})
+const getAllContacts = async (req, res, next) => {
+  const listContacts = await contacts.listContacts(req.user._id)
+  res.json(listContacts)
+}
 
-router.get('/:contactId', async (req, res, next) => {
-  try {
-    const { contactId } = req.params
-    const contact = await contacts.getContactById(contactId)
-    if (!contact) {
-      res.status(404).json({
-        message: 'Not Found'
-      })
-    }
-    res.json(contact)
-  } catch (error) {
-    next(error)
+const getOneContact = async (req, res, next) => {
+  const { contactId } = req.params
+  const contact = await contacts.getContactById(req.user._id, contactId)
+  if (!contact) {
+    throw new createError(404, 'Not Found')
   }
-})
+  res.json(contact)
+}
 
-router.post('/', async (req, res, next) => {
-  try {
-    const { error } = contactSchema.validate(req.body)
-    if (error) {
-      res.status(400).json({
-        message: 'missing required name field'
-      })
-      return
-    }
-    const newContact = await contacts.addContact(req.body)
-    res.status(201).json(newContact)
-  } catch (error) {
-    next(error)
+const addOneContact = async (req, res, next) => {
+  const { error } = contactSchema.validate(req.body)
+  if (error) {
+    throw new createError(400, 'missing required name field')
   }
-})
+  const newContact = await contacts.addContact({ ...req.body, owner: req.user._id })
+  res.status(201).json(newContact)
+}
 
-router.put('/:contactId', async (req, res, next) => {
-  try {
-    const { error } = contactSchema.validate(req.body)
-    if (error) {
-      res.status(400).json({
-        message: 'missing fields'
-      })
-      return
-    }
-    const { contactId } = req.params
-    const updatedContact = await contacts.updateContact(contactId, req.body)
-    if (!updatedContact) {
-      res.status(404).json({
-        message: 'Not Found'
-      })
-    }
-    res.json(updatedContact)
-  } catch (error) {
-    next(error)
+const updateOneContact = async (req, res, next) => {
+  const { error } = contactSchema.validate(req.body)
+  if (error) {
+    throw new createError(400, 'missing fields')
   }
-})
+  const { contactId } = req.params
+  const updatedContact = await contacts.updateContact(req.user._id, contactId, req.body)
+  if (!updatedContact) {
+    throw new createError(404, 'Not Found')
+  }
+  res.json(updatedContact)
+}
 
-router.patch('/:contactId/favorite', async (req, res, next) => {
-  try {
-    const { error } = favoriteSchema.validate(req.body)
-    if (error) {
-      res.status(400).json({
-        message: 'missing field favorite'
-      })
-      return
-    }
-    const { contactId } = req.params
-    const updatedContact = await contacts.updateStatusContact(contactId, req.body)
-    if (!updatedContact) {
-      res.status(404).json({
-        message: 'Not Found'
-      })
-    }
-    res.json(updatedContact)
-  } catch (error) {
-    next(error)
+const updateOneStatus = async (req, res, next) => {
+  const { error } = favoriteSchema.validate(req.body)
+  if (error) {
+    throw new createError(400, 'missing field favorite')
   }
-})
+  const { contactId } = req.params
+  const updatedContact = await contacts.updateStatusContact(req.user._id, contactId, req.body)
+  if (!updatedContact) {
+    throw new createError(404, 'Not Found')
+  }
+  res.json(updatedContact)
+}
 
-router.delete('/:contactId', async (req, res, next) => {
-  try {
-    const { contactId } = req.params
-    const deletedContact = await contacts.removeContact(contactId)
-    if (!deletedContact) {
-      res.status(404).json({
-        message: 'Not Found'
-      })
-    }
-    res.json(deletedContact)
-  } catch (error) {
-    next(error)
+const deleteOneContact = async (req, res, next) => {
+  const { contactId } = req.params
+  const deletedContact = await contacts.removeContact(req.user._id, contactId)
+  if (!deletedContact) {
+    throw new createError(404, 'Not Found')
   }
-})
+  res.json(deletedContact)
+}
+
+router.get('/', asyncWrapper(authentication), asyncWrapper(getAllContacts))
+router.get('/:contactId', asyncWrapper(authentication), asyncWrapper(getOneContact))
+router.post('/', asyncWrapper(authentication), asyncWrapper(addOneContact))
+router.put('/:contactId', asyncWrapper(authentication), asyncWrapper(updateOneContact))
+router.patch('/:contactId/favorite', asyncWrapper(authentication), asyncWrapper(updateOneStatus))
+router.delete('/:contactId', asyncWrapper(authentication), asyncWrapper(deleteOneContact))
 
 module.exports = router
