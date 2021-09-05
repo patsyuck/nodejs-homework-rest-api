@@ -1,5 +1,6 @@
 const express = require('express')
 const router = express.Router()
+// const { userSchema } = require('../../validation')
 const asyncWrapper = require('../middlewares/controllerWrapper')
 
 const register = async (req, res, next) => {}
