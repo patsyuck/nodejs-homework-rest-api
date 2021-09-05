@@ -5,6 +5,7 @@ const { User } = require('../../model/user')
 const { userSchema } = require('../../validation')
 const asyncWrapper = require('../middlewares/controllerWrapper')
 const createError = require('http-errors')
+// const bcrypt = require('bcryptjs')
 
 const register = async (req, res, next) => {
   const { error } = userSchema.validate(req.body)
@@ -16,11 +17,15 @@ const register = async (req, res, next) => {
   if (user) {
     throw new createError(409, 'Email in use')
   }
-  const result = await User.create(req.body)
+  // const hashPassword = bcrypt.hashSync(password, bcrypt.genSaltSync(7))
+  // const result = await User.create({ email, password: hashPassword })
+  const newUser = new User({ email })
+  newUser.setPassword(password)
+  const result = await newUser.save()
   res.status(201).json({
     user: {
-      email: email,
-      subscription: 'starter'
+      email: result.email,
+      subscription: result.subscription
     }
   })
 }
