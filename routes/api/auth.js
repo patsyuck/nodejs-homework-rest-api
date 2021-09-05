@@ -5,6 +5,8 @@ const { User } = require('../../model/user')
 const { userSchema } = require('../../validation')
 const asyncWrapper = require('../middlewares/controllerWrapper')
 const createError = require('http-errors')
+const jwt = require('jsonwebtoken')
+const { SECRET_KEY } = require('../../config')
 
 const register = async (req, res, next) => {
   const { error } = userSchema.validate(req.body)
@@ -37,7 +39,10 @@ const login = async (req, res, next) => {
   if (!user || !user.validPassword(password)) {
     throw new createError(401, 'Email or password is wrong')
   }
-  const token = 'one.token.example'
+  const payload = {
+    id: user._id
+  }
+  const token = jwt.sign(payload, SECRET_KEY)
   res.status(200).json({
     token: token,
     user: {
