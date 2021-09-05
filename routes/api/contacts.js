@@ -3,7 +3,7 @@ const express = require('express')
 const router = express.Router()
 const contacts = require('../../model')
 const { contactSchema, favoriteSchema } = require('../../validation')
-const asyncWrapper = require('../middlewares/controllerWrapper')
+const { asyncWrapper, authentication } = require('../middlewares')
 const createError = require('http-errors')
 
 const getAllContacts = async (req, res, next) => {
@@ -64,11 +64,11 @@ const deleteOneContact = async (req, res, next) => {
   res.json(deletedContact)
 }
 
-router.get('/', asyncWrapper(getAllContacts))
-router.get('/:contactId', asyncWrapper(getOneContact))
-router.post('/', asyncWrapper(addOneContact))
-router.put('/:contactId', asyncWrapper(updateOneContact))
-router.patch('/:contactId/favorite', asyncWrapper(updateOneStatus))
-router.delete('/:contactId', asyncWrapper(deleteOneContact))
+router.get('/', asyncWrapper(authentication), asyncWrapper(getAllContacts))
+router.get('/:contactId', asyncWrapper(authentication), asyncWrapper(getOneContact))
+router.post('/', asyncWrapper(authentication), asyncWrapper(addOneContact))
+router.put('/:contactId', asyncWrapper(authentication), asyncWrapper(updateOneContact))
+router.patch('/:contactId/favorite', asyncWrapper(authentication), asyncWrapper(updateOneStatus))
+router.delete('/:contactId', asyncWrapper(authentication), asyncWrapper(deleteOneContact))
 
 module.exports = router
