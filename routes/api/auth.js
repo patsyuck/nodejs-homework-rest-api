@@ -5,7 +5,6 @@ const { User } = require('../../model/user')
 const { userSchema } = require('../../validation')
 const asyncWrapper = require('../middlewares/controllerWrapper')
 const createError = require('http-errors')
-// const bcrypt = require('bcryptjs')
 
 const register = async (req, res, next) => {
   const { error } = userSchema.validate(req.body)
@@ -17,8 +16,6 @@ const register = async (req, res, next) => {
   if (user) {
     throw new createError(409, 'Email in use')
   }
-  // const hashPassword = bcrypt.hashSync(password, bcrypt.genSaltSync(7))
-  // const result = await User.create({ email, password: hashPassword })
   const newUser = new User({ email })
   newUser.setPassword(password)
   const result = await newUser.save()
@@ -30,7 +27,26 @@ const register = async (req, res, next) => {
   })
 }
 
-const login = async (req, res, next) => {}
+const login = async (req, res, next) => {
+  const { error } = userSchema.validate(req.body)
+  if (error) {
+    throw new createError(400, error.message)
+  }
+  const { email, password } = req.body
+  const user = await User.findOne({ email })
+  if (!user || !user.validPassword(password)) {
+    throw new createError(401, 'Email or password is wrong')
+  }
+  const token = 'one.token.example'
+  res.status(200).json({
+    token: token,
+    user: {
+      email: user.email,
+      subscription: user.subscription
+    }
+  })
+}
+
 const logout = async (req, res, next) => {}
 const current = async (req, res, next) => {}
 
