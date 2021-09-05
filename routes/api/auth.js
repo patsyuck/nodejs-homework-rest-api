@@ -3,7 +3,7 @@ const express = require('express')
 const router = express.Router()
 const { User } = require('../../model/user')
 const { userSchema } = require('../../validation')
-const { asyncWrapper } = require('../middlewares')
+const { asyncWrapper, authentication } = require('../middlewares')
 const createError = require('http-errors')
 const jwt = require('jsonwebtoken')
 const { SECRET_KEY } = require('../../config')
@@ -53,12 +53,16 @@ const login = async (req, res, next) => {
   })
 }
 
-const logout = async (req, res, next) => {}
+const logout = async (req, res, next) => {
+  await User.findByIdAndUpdate(req.user._id, { token: null })
+  res.status(204).json()
+}
+
 const current = async (req, res, next) => {}
 
 router.post('/register', asyncWrapper(register))
 router.post('/login', asyncWrapper(login))
-router.post('/logout', asyncWrapper(logout))
+router.post('/logout', asyncWrapper(authentication), asyncWrapper(logout))
 router.get('/current', asyncWrapper(current))
 
 module.exports = router
