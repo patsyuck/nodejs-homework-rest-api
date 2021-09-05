@@ -58,11 +58,16 @@ const logout = async (req, res, next) => {
   res.status(204).json()
 }
 
-const current = async (req, res, next) => {}
+const current = (req, res, next) => {
+  res.json({
+    email: req.user.email,
+    subscription: req.user.subscription
+  })
+}
 
 router.post('/register', asyncWrapper(register))
 router.post('/login', asyncWrapper(login))
 router.post('/logout', asyncWrapper(authentication), asyncWrapper(logout))
-router.get('/current', asyncWrapper(current))
+router.get('/current', asyncWrapper(authentication), asyncWrapper(current))
 
 module.exports = router
