@@ -7,13 +7,13 @@ const { asyncWrapper, authentication } = require('../middlewares')
 const createError = require('http-errors')
 
 const getAllContacts = async (req, res, next) => {
-  const listContacts = await contacts.listContacts()
+  const listContacts = await contacts.listContacts(req.user._id)
   res.json(listContacts)
 }
 
 const getOneContact = async (req, res, next) => {
   const { contactId } = req.params
-  const contact = await contacts.getContactById(contactId)
+  const contact = await contacts.getContactById(req.user._id, contactId)
   if (!contact) {
     throw new createError(404, 'Not Found')
   }
@@ -25,7 +25,7 @@ const addOneContact = async (req, res, next) => {
   if (error) {
     throw new createError(400, 'missing required name field')
   }
-  const newContact = await contacts.addContact(req.body)
+  const newContact = await contacts.addContact({ ...req.body, owner: req.user._id })
   res.status(201).json(newContact)
 }
 
@@ -35,7 +35,7 @@ const updateOneContact = async (req, res, next) => {
     throw new createError(400, 'missing fields')
   }
   const { contactId } = req.params
-  const updatedContact = await contacts.updateContact(contactId, req.body)
+  const updatedContact = await contacts.updateContact(req.user._id, contactId, req.body)
   if (!updatedContact) {
     throw new createError(404, 'Not Found')
   }
@@ -48,7 +48,7 @@ const updateOneStatus = async (req, res, next) => {
     throw new createError(400, 'missing field favorite')
   }
   const { contactId } = req.params
-  const updatedContact = await contacts.updateStatusContact(contactId, req.body)
+  const updatedContact = await contacts.updateStatusContact(req.user._id, contactId, req.body)
   if (!updatedContact) {
     throw new createError(404, 'Not Found')
   }
@@ -57,7 +57,7 @@ const updateOneStatus = async (req, res, next) => {
 
 const deleteOneContact = async (req, res, next) => {
   const { contactId } = req.params
-  const deletedContact = await contacts.removeContact(contactId)
+  const deletedContact = await contacts.removeContact(req.user._id, contactId)
   if (!deletedContact) {
     throw new createError(404, 'Not Found')
   }
