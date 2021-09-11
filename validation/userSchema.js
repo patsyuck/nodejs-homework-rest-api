@@ -5,7 +5,8 @@ const emailSample = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))
 
 const userSchema = Joi.object({
   email: Joi.string().pattern(RegExp(emailSample)).required(),
-  password: Joi.string().min(7).required()
+  password: Joi.string().min(7).required(),
+  avatarURL: Joi.string()
 })
 
 module.exports = { userSchema }
