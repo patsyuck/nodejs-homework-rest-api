@@ -7,7 +7,11 @@ const { asyncWrapper, authentication, upload } = require('../middlewares')
 const createError = require('http-errors')
 const jwt = require('jsonwebtoken')
 const gravatar = require('gravatar')
+const fs = require('fs/promises')
+const path = require('path')
+const Jimp = require('jimp')
 const { SECRET_KEY } = require('../../config')
+const uploadDir = path.join(__dirname, '../../', 'public/avatars')
 
 const register = async (req, res, next) => {
   const { error } = userSchema.validate(req.body)
@@ -70,7 +74,21 @@ const current = (req, res, next) => {
 }
 
 const updateImage = async (req, res, next) => {
-  next()
+  const id = req.user._id.toString()
+  const oldFileName = req.file.originalname.split('.')
+  const ext = oldFileName[oldFileName.length - 1]
+  const newFileName = path.join(uploadDir, id + '.' + ext)
+  try {
+    const file = await Jimp.read(req.file.path)
+    await file.resize(250, 250).write(newFileName)
+    await fs.unlink(req.file.path)
+    res.json({
+      avatarUrl: '/avatars/' + id + '.' + ext
+    })
+  } catch (error) {
+    await fs.unlink(req.file.path)
+    throw error
+  }
 }
 
 router.post('/register', asyncWrapper(register))
