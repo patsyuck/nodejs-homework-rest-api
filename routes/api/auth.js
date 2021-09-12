@@ -7,9 +7,12 @@ const { asyncWrapper, authentication } = require('../middlewares')
 // const { asyncWrapper, authentication, upload } = require('../middlewares')
 const createError = require('http-errors')
 const jwt = require('jsonwebtoken')
+const gravatar = require('gravatar')
 const { SECRET_KEY } = require('../../config')
 
 const register = async (req, res, next) => {
+  // console.log(req.body)
+  // console.log(req.file)
   const { error } = userSchema.validate(req.body)
   if (error) {
     throw new createError(400, error.message)
@@ -21,6 +24,9 @@ const register = async (req, res, next) => {
   }
   const newUser = new User({ email })
   newUser.setPassword(password)
+  const avatar = gravatar.url(email)
+  console.log(avatar)
+  newUser.avatarURL = avatar
   const result = await newUser.save()
   res.status(201).json({
     user: {
@@ -65,10 +71,6 @@ const current = (req, res, next) => {
     subscription: req.user.subscription
   })
 }
-
-/* const updateImage = async (req, res) => {
-  console.log(req.file)
-} */
 
 router.post('/register', asyncWrapper(register))
 // router.post('/register', upload.single('avatar'), asyncWrapper(register))
