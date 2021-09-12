@@ -4,6 +4,7 @@ const router = express.Router()
 const { User } = require('../../model/user')
 const { userSchema } = require('../../validation')
 const { asyncWrapper, authentication } = require('../middlewares')
+// const { asyncWrapper, authentication, upload } = require('../middlewares')
 const createError = require('http-errors')
 const jwt = require('jsonwebtoken')
 const { SECRET_KEY } = require('../../config')
@@ -65,7 +66,12 @@ const current = (req, res, next) => {
   })
 }
 
+/* const updateImage = async (req, res) => {
+  console.log(req.file)
+} */
+
 router.post('/register', asyncWrapper(register))
+// router.post('/register', upload.single('avatar'), asyncWrapper(register))
 router.post('/login', asyncWrapper(login))
 router.post('/logout', asyncWrapper(authentication), asyncWrapper(logout))
 router.get('/current', asyncWrapper(authentication), asyncWrapper(current))
