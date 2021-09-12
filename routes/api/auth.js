@@ -3,10 +3,15 @@ const express = require('express')
 const router = express.Router()
 const { User } = require('../../model/user')
 const { userSchema } = require('../../validation')
-const { asyncWrapper, authentication } = require('../middlewares')
+const { asyncWrapper, authentication, upload } = require('../middlewares')
 const createError = require('http-errors')
 const jwt = require('jsonwebtoken')
+const gravatar = require('gravatar')
+const fs = require('fs/promises')
+const path = require('path')
+const Jimp = require('jimp')
 const { SECRET_KEY } = require('../../config')
+const uploadDir = path.join(__dirname, '../../', 'public/avatars')
 
 const register = async (req, res, next) => {
   const { error } = userSchema.validate(req.body)
@@ -20,6 +25,8 @@ const register = async (req, res, next) => {
   }
   const newUser = new User({ email })
   newUser.setPassword(password)
+  const avatar = gravatar.url(email)
+  newUser.avatarURL = avatar
   const result = await newUser.save()
   res.status(201).json({
     user: {
@@ -65,9 +72,30 @@ const current = (req, res, next) => {
   })
 }
 
+const updateImage = async (req, res, next) => {
+  const id = req.user._id.toString()
+  const oldFileName = req.file.originalname.split('.')
+  const ext = oldFileName[oldFileName.length - 1]
+  const newFileName = path.join(uploadDir, id + '.' + ext)
+  const newUrl = '/avatars/' + id + '.' + ext
+  try {
+    const file = await Jimp.read(req.file.path)
+    await file.resize(250, 250).write(newFileName)
+    await fs.unlink(req.file.path)
+    await User.findByIdAndUpdate(req.user._id, { avatarURL: newUrl })
+    res.json({
+      avatarUrl: newUrl
+    })
+  } catch (error) {
+    await fs.unlink(req.file.path)
+    throw error
+  }
+}
+
 router.post('/register', asyncWrapper(register))
 router.post('/login', asyncWrapper(login))
 router.post('/logout', asyncWrapper(authentication), asyncWrapper(logout))
 router.get('/current', asyncWrapper(authentication), asyncWrapper(current))
+router.patch('/avatars', asyncWrapper(authentication), upload.single('avatar'), asyncWrapper(updateImage))
 
 module.exports = router
