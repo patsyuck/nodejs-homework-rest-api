@@ -26,7 +26,6 @@ const register = async (req, res, next) => {
   const newUser = new User({ email })
   newUser.setPassword(password)
   const avatar = gravatar.url(email)
-  console.log(avatar)
   newUser.avatarURL = avatar
   const result = await newUser.save()
   res.status(201).json({
@@ -78,12 +77,14 @@ const updateImage = async (req, res, next) => {
   const oldFileName = req.file.originalname.split('.')
   const ext = oldFileName[oldFileName.length - 1]
   const newFileName = path.join(uploadDir, id + '.' + ext)
+  const newUrl = '/avatars/' + id + '.' + ext
   try {
     const file = await Jimp.read(req.file.path)
     await file.resize(250, 250).write(newFileName)
     await fs.unlink(req.file.path)
+    await User.findByIdAndUpdate(req.user._id, { avatarURL: newUrl })
     res.json({
-      avatarUrl: '/avatars/' + id + '.' + ext
+      avatarUrl: newUrl
     })
   } catch (error) {
     await fs.unlink(req.file.path)
