@@ -35,7 +35,7 @@ const register = async (req, res, next) => {
     subject: 'Підтвердіть реєстрацію на сайті',
     html: `<a href="http://localhost:3000/users/verify/${verifyToken}">Підтвердіть реєстрацію, перейшовши за цим посиланням</a>`,
   }
-  const isSuccessfulSending = await sendMail(mail)
+  await sendMail(mail)
   const result = await newUser.save()
   res.status(201).json({
     user: {
@@ -104,8 +104,20 @@ const updateImage = async (req, res, next) => {
   }
 }
 
+const verify = async (req, res, next) => {
+  const { verificationToken } = req.params
+  const user = await User.findOne({ verifyToken: verificationToken })
+  if (!user) {
+    throw new createError(404, 'User not found')
+  }
+  await User.findByIdAndUpdate(user._id, { verify: true, verifyToken: null })
+  res.json({
+    message: 'Verification successful'
+  })
+}
+
 router.post('/register', asyncWrapper(register))
-/* router.get('/users/verify/:verificationToken', asyncWrapper(verify)) */
+router.get('/verify/:verificationToken', asyncWrapper(verify))
 router.post('/login', asyncWrapper(login))
 router.post('/logout', asyncWrapper(authentication), asyncWrapper(logout))
 router.get('/current', asyncWrapper(authentication), asyncWrapper(current))
