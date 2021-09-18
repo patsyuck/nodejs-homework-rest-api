@@ -10,6 +10,7 @@ const gravatar = require('gravatar')
 const fs = require('fs/promises')
 const path = require('path')
 const Jimp = require('jimp')
+const { v4: idGenerator } = require('uuid')
 const { SECRET_KEY } = require('../../config')
 const uploadDir = path.join(__dirname, '../../', 'public/avatars')
 
@@ -23,7 +24,8 @@ const register = async (req, res, next) => {
   if (user) {
     throw new createError(409, 'Email in use')
   }
-  const newUser = new User({ email })
+  const verifyToken = idGenerator()
+  const newUser = new User({ email, verifyToken })
   newUser.setPassword(password)
   const avatar = gravatar.url(email)
   newUser.avatarURL = avatar
