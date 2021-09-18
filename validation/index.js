@@ -1,8 +1,9 @@
 const { contactSchema, favoriteSchema } = require('./contactSchema')
-const { userSchema } = require('./userSchema')
+const { userSchema, verificationSchema } = require('./userSchema')
 
 module.exports = {
   contactSchema,
   favoriteSchema,
-  userSchema
+  userSchema,
+  verificationSchema
 }

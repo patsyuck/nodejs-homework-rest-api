@@ -2,7 +2,7 @@
 const express = require('express')
 const router = express.Router()
 const { User } = require('../../model/user')
-const { userSchema } = require('../../validation')
+const { userSchema, verificationSchema } = require('../../validation')
 const { asyncWrapper, authentication, upload } = require('../middlewares')
 const createError = require('http-errors')
 const jwt = require('jsonwebtoken')
@@ -10,6 +10,8 @@ const gravatar = require('gravatar')
 const fs = require('fs/promises')
 const path = require('path')
 const Jimp = require('jimp')
+const { v4: idGenerator } = require('uuid')
+const sendMail = require('../../utils/sendMail')
 const { SECRET_KEY } = require('../../config')
 const uploadDir = path.join(__dirname, '../../', 'public/avatars')
 
@@ -23,10 +25,17 @@ const register = async (req, res, next) => {
   if (user) {
     throw new createError(409, 'Email in use')
   }
-  const newUser = new User({ email })
+  const verifyToken = idGenerator()
+  const newUser = new User({ email, verifyToken })
   newUser.setPassword(password)
   const avatar = gravatar.url(email)
   newUser.avatarURL = avatar
+  const mail = {
+    to: email,
+    subject: 'Підтвердіть реєстрацію на сайті',
+    html: `<a href="http://localhost:3000/users/verify/${verifyToken}">Підтвердіть реєстрацію, перейшовши за цим посиланням</a>`,
+  }
+  await sendMail(mail)
   const result = await newUser.save()
   res.status(201).json({
     user: {
@@ -45,6 +54,9 @@ const login = async (req, res, next) => {
   const user = await User.findOne({ email })
   if (!user || !user.validPassword(password)) {
     throw new createError(401, 'Email or password is wrong')
+  }
+  if (!user.verify) {
+    throw new createError(400, 'Email is not verified')
   }
   const payload = {
     id: user._id
@@ -92,7 +104,42 @@ const updateImage = async (req, res, next) => {
   }
 }
 
+const verifyToken = async (req, res, next) => {
+  const { verificationToken } = req.params
+  const user = await User.findOne({ verifyToken: verificationToken })
+  if (!user) {
+    throw new createError(404, 'User not found')
+  }
+  await User.findByIdAndUpdate(user._id, { verify: true, verifyToken: null })
+  res.json({
+    message: 'Verification successful'
+  })
+}
+
+const verify = async (req, res, next) => {
+  const { error } = verificationSchema.validate(req.body)
+  if (error) {
+    throw new createError(400, 'missing required field email')
+  }
+  const { email } = req.body
+  const user = await User.findOne({ email })
+  if (user.verify) {
+    throw new createError(400, 'Verification has already been passed')
+  }
+  const mail = {
+    to: email,
+    subject: 'Підтвердіть реєстрацію на сайті',
+    html: `<a href="http://localhost:3000/users/verify/${user.verifyToken}">Підтвердіть реєстрацію, перейшовши за цим посиланням</a>`,
+  }
+  await sendMail(mail)
+  res.json({
+    message: 'Verification email sent'
+  })
+}
+
 router.post('/register', asyncWrapper(register))
+router.get('/verify/:verificationToken', asyncWrapper(verifyToken))
+router.post('/verify', asyncWrapper(verify))
 router.post('/login', asyncWrapper(login))
 router.post('/logout', asyncWrapper(authentication), asyncWrapper(logout))
 router.get('/current', asyncWrapper(authentication), asyncWrapper(current))
