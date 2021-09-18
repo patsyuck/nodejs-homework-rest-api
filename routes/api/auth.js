@@ -11,6 +11,7 @@ const fs = require('fs/promises')
 const path = require('path')
 const Jimp = require('jimp')
 const { v4: idGenerator } = require('uuid')
+const sendMail = require('../../utils/sendMail')
 const { SECRET_KEY } = require('../../config')
 const uploadDir = path.join(__dirname, '../../', 'public/avatars')
 
@@ -29,6 +30,12 @@ const register = async (req, res, next) => {
   newUser.setPassword(password)
   const avatar = gravatar.url(email)
   newUser.avatarURL = avatar
+  const mail = {
+    to: email,
+    subject: 'Підтвердіть реєстрацію на сайті',
+    html: `<a href="http://localhost:3000/users/verify/${verifyToken}">Підтвердіть реєстрацію, перейшовши за цим посиланням</a>`,
+  }
+  const isSuccessfulSending = await sendMail(mail)
   const result = await newUser.save()
   res.status(201).json({
     user: {
