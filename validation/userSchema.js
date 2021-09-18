@@ -9,4 +9,11 @@ const userSchema = Joi.object({
   avatarURL: Joi.string()
 })
 
-module.exports = { userSchema }
+const verificationSchema = Joi.object({
+  email: Joi.string().pattern(RegExp(emailSample)).required()
+})
+
+module.exports = {
+  userSchema,
+  verificationSchema
+}
