@@ -55,6 +55,9 @@ const login = async (req, res, next) => {
   if (!user || !user.validPassword(password)) {
     throw new createError(401, 'Email or password is wrong')
   }
+  if (!user.verify) {
+    throw new createError(400, 'Email is not verified')
+  }
   const payload = {
     id: user._id
   }
@@ -102,6 +105,7 @@ const updateImage = async (req, res, next) => {
 }
 
 router.post('/register', asyncWrapper(register))
+/* router.get('/users/verify/:verificationToken', asyncWrapper(verify)) */
 router.post('/login', asyncWrapper(login))
 router.post('/logout', asyncWrapper(authentication), asyncWrapper(logout))
 router.get('/current', asyncWrapper(authentication), asyncWrapper(current))
