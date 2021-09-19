@@ -8,8 +8,11 @@
 Для коректної роботи в корені проекту має бути файл config.js із наступним вмістом:
 
 const DB_HOST = 'ваш_srv-рядок_для_підключення_до_бази_даних_MongoDB'
-const SECRET_KEY = 'ваш_пароль_для_підключення_до_бази_даних_MongoDB'
+
+const SECRET_KEY = 'ваше_секретне_слово_для_створення_JWT(json_веб_токена)'
+
 const SENDGRID_KEY = 'ваш_ключ_для_розсилки_листів_через_SendGrid'
+
 const SENDGRID_FROM = 'ваш_email_з_якого_розсилатимуться_листи'
 
 module.exports = {
